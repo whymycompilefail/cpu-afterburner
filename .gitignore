@@ -1,5 +1,8 @@
-# setup.sh 默认把上游克隆放在这里
-llama.cpp/
+# llama.cpp 源码树随仓库分发（见 README「为什么源码在仓库里」）。
+# 只跟源码：构建产物、测试用 vocab、文档图片都不进。
+/llama.cpp/build/
+/llama.cpp/models/
+/llama.cpp/docs/
 
 # 编译产物
 build/

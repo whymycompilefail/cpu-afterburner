@@ -4,6 +4,11 @@
 cpu-afterburner.patch     20 files changed, 1428 insertions(+), 194 deletions(-)   112 KB
 ```
 
+> 2026-11-18 起，**源码已随仓库分发**（`llama.cpp/`，3,453 文件）。这份 patch 现在是
+> 两件事：改动记录（review 用）+ 换上游版本时的重放工具。想确认那棵树没被私自改过，
+> 跑 `scripts/verify-tree.sh`，它会要求「与基线不同的文件恰好是这 20 个」。
+> 下面"怎么自己验基线"那节仍然有用——它是那个脚本的原理，也是换新上游版本时的做法。
+
 ## 基线
 
 | | |

@@ -8,3 +8,7 @@
 # 二进制
 *.gguf binary
 *.png binary
+
+# 例外：这 4 个 vendored JS 库在上游仓库里就是拿 CRLF 提交的。text=auto 会把它们
+# 改写成 LF，于是我们这棵树与上游就不再逐字节一致（审计靠 blob 哈希比对）。
+llama.cpp/tools/ui/src/lib/vendors/** -text

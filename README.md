@@ -10,32 +10,51 @@
 
 ## 这是什么
 
-**不是一份 fork 源码，是一个 patch。**
+**一棵 clone 下来就能编译的源码树，外加一份"我们到底改了什么"的 patch。**
 
 ```
-patches/cpu-afterburner.patch      20 files, +1428 / -194,  112 KB
-scripts/setup.sh                   clone 上游 -> 退到基线 -> 打 patch -> 编译
+llama.cpp/                     3,450 文件 —— 上游 e351231 + 本 patch 的结果
+patches/cpu-afterburner.patch  20 files, +1428 / -194,  112 KB —— 改动本身
+scripts/setup.sh               cmake 配置 + 编译（不联网、不打 patch）
+scripts/verify-tree.sh         校验这棵树 = 基线 + patch，逐字节
 ```
 
-`setup.sh` 会 clone 官方 llama.cpp、退到 `e351231`、打上 patch、编出
-`llama-server` / `llama-bench` / `llama-tts`。
+两份都留的理由不同：源码树解决"拿到就能编"，patch 解决"改动永远看得见"。
 
-为什么不直接发源码：llama.cpp 有 3,600 多个文件，全搬进仓库既臃肿又没法 review。
-patch 的好处是**改动永远可见**——你随时能看到"他到底动了什么"，而不是在一堆
-vendor 代码里比对。
+**为什么源码进仓库了**：先前只发 patch，代价是别人必须先弄到那个精确的上游 commit。
+而 README 里那个 hash 曾是错的（一个不存在的 commit），陌生人照着做只会 404；
+退一步"找个日期最接近的"，20 个文件里 17 个已被上游改过，`git apply` 只报 2 个失败、
+其余静默错位。**可运行性不该依赖一个外部 commit 恰好还在。** 所以现在源码随仓库走，
+patch 保留为可读的改动记录，`verify-tree.sh` 负责证明两者仍等价。
 
 ## 快速开始
 
 ```bash
-bash scripts/setup.sh            # 默认建在 ./llama.cpp（已 gitignore）
-# 或者建到公共位置，给多个项目共用：
-DEST=/d/llama.cpp bash scripts/setup.sh
+git clone https://github.com/whymycompilefail/cpu-afterburner
+cd cpu-afterburner
+bash scripts/setup.sh              # 构建到 llama.cpp/build/
 ```
+
+多个项目共用一份构建产物：
+
+```bash
+BUILD=/d/llama-cpp-build bash scripts/setup.sh
+```
+
+**不联网，不打 patch**——源码就在 `llama.cpp/` 里。
 
 Windows 上必须在 MSVC 环境里跑（`INCLUDE` / `LIB` 要有值），否则会挂在
 `fatal error C1083: 无法打开 stdbool.h`——那个报错看起来像源码问题，其实是环境变量没设。
 
-基线是 `e351231`，**别换成别的 commit**。上游 `ggml/src/ggml-cpu/` 每周都在重构。
+想确认这棵树没被动过手脚（例如有人往 `llama.cpp/` 里塞了没记录的改动）：
+
+```bash
+bash scripts/verify-tree.sh
+```
+
+它会去上游取 `e351231` 的树（只取 tree，不下载文件内容），然后按 blob 哈希比对，
+要求「与基线不同的文件恰好是 patch 里那 20 个」。这个脚本存在的意义是防止
+**源码副本静默腐化**——这正是当初不敢把源码放进仓库的理由，现在用一条命令解决。
 
 ---
 
@@ -123,18 +142,21 @@ profiler 给出的证据：`MUL_MAT_ID` 的 `max/mean = 1.173`（关键路径白
 早期这三个仓库各自收编了一份 llama.cpp，其中两份几乎全同（99% 的文件是同一个上游），
 只有 4 个文件版本不同，**且差异全是旧的那份落后**。现在收拢到这里，谁也不许再扁平化一份进去。
 
-用法：把 `DEST` 指到同一个位置，几个项目共用一份构建产物。
+用法：clone 本仓库，让各项目的 `LLAMA_DIR` 指向这里的 `llama.cpp`，构建一次共用。
 
 ---
 
 ## 不含什么
 
 - **不含权重**。模型自己去 HuggingFace 找。
-- **不含上游代码**。由 `setup.sh` 重建。
-- **不含构建产物**。
+- **不含构建产物**（`llama.cpp/build/` 被忽略）。
+- **不含 `llama.cpp/{docs,models}/`**：前者是文档图片，后者是 121 个测试用 vocab gguf
+  （74 MB 二进制）。这两块删掉不影响编译，`verify-tree.sh` 里对它们单独放行。
 - **不含那个"51 题的分数"**。那属于 cpu-intern，且依赖不公开的题池，
   在这里引用它等于不可复现的主张。
 
 ## License
 
-MIT。移植部分（profiler）来自 smolmaxxing（同为 MIT），已在对应 spec 中标注。
+MIT。`llama.cpp/` 是上游 llama.cpp 的副本（同为 MIT，见 `llama.cpp/LICENSE`），
+我们的改动是 `patches/cpu-afterburner.patch` 里那 20 个文件。
+移植部分（profiler）来自 smolmaxxing（同为 MIT），已在对应 spec 中标注。
