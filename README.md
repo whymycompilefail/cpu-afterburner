@@ -17,7 +17,7 @@ patches/cpu-afterburner.patch      20 files, +1428 / -194,  112 KB
 scripts/setup.sh                   clone 上游 -> 退到基线 -> 打 patch -> 编译
 ```
 
-`setup.sh` 会 clone 官方 llama.cpp、退到 `5096f2a`、打上 patch、编出
+`setup.sh` 会 clone 官方 llama.cpp、退到 `e351231`、打上 patch、编出
 `llama-server` / `llama-bench` / `llama-tts`。
 
 为什么不直接发源码：llama.cpp 有 3,600 多个文件，全搬进仓库既臃肿又没法 review。
@@ -35,7 +35,7 @@ DEST=/d/llama.cpp bash scripts/setup.sh
 Windows 上必须在 MSVC 环境里跑（`INCLUDE` / `LIB` 要有值），否则会挂在
 `fatal error C1083: 无法打开 stdbool.h`——那个报错看起来像源码问题，其实是环境变量没设。
 
-基线是 `5096f2a`，**别换成别的 commit**。上游 `ggml/src/ggml-cpu/` 每周都在重构。
+基线是 `e351231`，**别换成别的 commit**。上游 `ggml/src/ggml-cpu/` 每周都在重构。
 
 ---
 

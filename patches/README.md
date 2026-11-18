@@ -8,13 +8,29 @@ cpu-afterburner.patch     20 files changed, 1428 insertions(+), 194 deletions(-)
 
 | | |
 |---|---|
-| 上游 commit | `5096f2a42468daff7ff38d97b48bd17432196e98` |
-| 相对的上游版本 | 2026-10 中旬 |
-| patch 相对谁生成 | fork 内的 `c649f60` |
+| 上游 commit | `e351231c4f4cdd89c88e696c46d0eb718c9e0ab5` |
+| 日期 | 2026-09-25（官方 master 上真实存在） |
+| patch 相对谁生成 | 本地快照 `c649f60`（flatten 后的工作树） |
 
-`c649f60` 是把 fork 从独立仓库 flatten 进上层项目时产生的提交。它跟上游 `5096f2a`
-**内容完全一致、只是目录层级不同**（`git diff --summary -M 5096f2a c649f60` 只有 rename 行）。
-所以 patch 可以直接打在 `5096f2a` 上，不需要先复刻 flatten。
+`c649f60` 是把 fork 从独立仓库 flatten 进上层项目时产生的提交，**只存在于我们本地的
+fork 历史里**（`D:\llama.cpp-fork-history.git`），官方仓库没有。我们的快照就是 `e351231`
+的工作树：3639 个同路径文件**逐字节相同**，只少 3 个与源码无关的文件
+（`build-xcframework.sh`、一个 Xcode plist、一个 bench log）。所以 patch 可以直接打在
+`e351231` 上，不需要先复刻 flatten。实测过：
+
+```bash
+git --work-tree=/tmp/base checkout e351231 -- $(patch 里的 20 个路径)
+cd /tmp/base && git init -q . && git apply --check /path/to/cpu-afterburner.patch   # 通过
+```
+
+> ⚠️ **这里早先写的是 `5096f2a`，那是错的。** `5096f2a` 是我们**自建**的快照 commit
+> （`author baseline@local`、无 parent、工作区在 `llama.cpp-master/` 下），官方仓库里
+> 根本没有这个对象：`git fetch https://github.com/ggml-org/llama.cpp 5096f2a` 会报
+> `not our ref`。拿它去 `git checkout` 必然失败。
+>
+> 这个错误在 setup 脚本里躺了很久没被发现，因为当初的"验证编译"用的是 `git archive`
+> 导出的树，**从没跑过脚本本身**。现在的基线是拿 patch 里 20 个文件的前像 blob 在官方
+> 历史里反查出来的：只有一个 commit（`e351231`，2026-09-25）能让这 20 个文件同时对上。
 
 **别打在别的 commit 上**。上游 `ggml/src/ggml-cpu/` 每周都在重构，打不上时 `git apply`
 报的位置会跟你说"某个不相干的函数对不上"，很容易误判成 patch 坏了。

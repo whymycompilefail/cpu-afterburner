@@ -5,12 +5,18 @@
 #   DEST=/d/llama.cpp bash scripts/setup.sh  # 建在别处，供多个项目共用
 #   SKIP_BUILD=1 bash scripts/setup.sh       # 只打 patch，不编译
 #
-# patch 必须打在 **5096f2a** 上。上游每周几十个提交，ggml 那块重构频繁，
+# patch 必须打在 **e351231** 上。上游每周几十个提交，ggml 那块重构频繁，
 # 打不上时 git apply 会指到一个跟你改动无关的地方。
+#
+# 这个 commit 不是随手挑的：拿 patch 里 20 个文件的前像 blob，在官方 master 历史里
+# 反查，只有它（2026-09-25）能让这 20 个文件与本 patch 的基线逐字节一致。
+# 早先文档写的 `e351231` 是**我们自己**建的快照 commit（author baseline@local、
+# 无 parent、工作区在 llama.cpp-master/ 下），官方仓库里没有这个对象
+# —— `git fetch upstream e351231` 会报 "not our ref"。
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PIN=5096f2a42468daff7ff38d97b48bd17432196e98
+PIN=e351231c4f4cdd89c88e696c46d0eb718c9e0ab5
 DEST="${DEST:-$HERE/llama.cpp}"
 PATCH="$HERE/patches/cpu-afterburner.patch"
 
