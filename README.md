@@ -38,7 +38,7 @@ bash scripts/setup.sh              # 构建到 llama.cpp/build/
 多个项目共用一份构建产物：
 
 ```bash
-BUILD=/d/llama-cpp-build bash scripts/setup.sh
+BUILD=/d/shared-llama-build bash scripts/setup.sh
 ```
 
 **不联网，不打 patch**——源码就在 `llama.cpp/` 里。
