@@ -10,9 +10,11 @@
 #
 # 这个 commit 不是随手挑的：拿 patch 里 20 个文件的前像 blob，在官方 master 历史里
 # 反查，只有它（2026-09-25）能让这 20 个文件与本 patch 的基线逐字节一致。
-# 早先文档写的 `e351231` 是**我们自己**建的快照 commit（author baseline@local、
-# 无 parent、工作区在 llama.cpp-master/ 下），官方仓库里没有这个对象
-# —— `git fetch upstream e351231` 会报 "not our ref"。
+# 早先文档写的是 `5096f2a`，那是个**错误**：它是我们自己建的快照 commit
+# （author baseline@local、无 parent、工作区在 llama.cpp-master/ 下），官方仓库里
+# 没有这个对象 —— `git fetch upstream 5096f2a` 会报 "not our ref"。
+# 别用"日期最接近"的 commit 顶替：一天之差就能让 17/20 个文件被上游改过。
+# 自己验基线的办法见 patches/README.md「怎么自己验基线」。
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

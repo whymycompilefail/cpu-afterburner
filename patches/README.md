@@ -35,6 +35,33 @@ cd /tmp/base && git init -q . && git apply --check /path/to/cpu-afterburner.patc
 **别打在别的 commit 上**。上游 `ggml/src/ggml-cpu/` 每周都在重构，打不上时 `git apply`
 报的位置会跟你说"某个不相干的函数对不上"，很容易误判成 patch 坏了。
 
+## 怎么自己验基线（别看日期）
+
+判据不是"哪个 commit 离得近"，而是 patch 自己写下的 `index <前像>..<后像>` 行 ——
+前像就是这份 patch 认为你手上应有的文件内容。一个 commit 的这 20 个 blob 全对上，
+它就是基线；差一天也不叫"接近"。
+
+```bash
+PIN=e351231c4f4cdd89c88e696c46d0eb718c9e0ab5
+awk '/^diff --git/{f=substr($3,3)} /^index /{h=$2; i=index(h,".."); print f, substr(h,1,i-1)}' \
+    patches/cpu-afterburner.patch |
+while read p h; do
+    [ "$(git rev-parse "$PIN:$p" | cut -c1-7)" = "$h" ] || { echo "对不上: $p"; exit 1; }
+done && echo "20/20 前像对上，这就是基线"
+```
+
+> ⚠️ 切 hash 必须用 `index(h,"..")`，**不能写 `split($2,a,"..")`**：awk 里 `".."` 是
+> 正则"任意两个字符"，会把 hash 切成碎片，结果 0/20 全不匹配，让你误判基线错了。
+
+**为什么不能拿"日期最接近"的 commit 顶替**：实测取 `23f7aab`（2026-10-16，比基线晚
+21 天），20 个文件里已有 **17 个**被上游改过。但 `git apply` 只报 **2 个**文件失败
+（`include/llama.h`、`src/llama-context.cpp`，都落在 KV cache 的 `type_k`/`type_v` 那段，
+也正是本 patch 改动最密集的地方）；其余 15 个是**带 offset 静默通过**的。
+
+这是最坏的失败形状：看着"只差一个 hunk，手改一下就行"，真实含义是"你在把 9 月的改动
+往 10 月的代码上贴，其中 15 个文件没有任何人验证过"。手补那个 hunk，等于自己写一段
+零测试覆盖的移植代码。
+
 ## 20 个文件，按主题分组
 
 ### A. MUL_MAT_ID 负载切分（decode +5.7% / prefill +18.3%）
