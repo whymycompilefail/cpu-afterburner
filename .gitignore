@@ -1,0 +1,19 @@
+# setup.sh 默认把上游克隆放在这里
+llama.cpp/
+
+# 编译产物
+build/
+*.exe
+*.dll
+*.lib
+*.obj
+*.pdb
+*.o
+
+# 权重：一律不进仓库
+*.gguf
+*.safetensors
+*.bin
+
+__pycache__/
+*.pyc
